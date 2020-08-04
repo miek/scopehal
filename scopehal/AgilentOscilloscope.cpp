@@ -491,6 +491,18 @@ bool AgilentOscilloscope::AcquireData(bool toQueue)
 		// Set source & get preamble
 		m_transport->SendCommand(":WAV:SOUR " + m_channels[i]->GetHwname());
 		m_transport->SendCommand(":WAV:PRE?");
+		m_transport->SendCommand(":WAV:DATA?");
+	}
+	for(size_t i=0; i<m_analogChannelCount; i++)
+	{
+		if(!IsChannelEnabled(i))
+		{
+			if(!toQueue)
+				m_channels[i]->SetData(NULL);
+			continue;
+		}
+
+
 		string reply = m_transport->ReadReply();
 		sscanf(reply.c_str(), "%u,%u,%lu,%u,%lf,%lf,%lf,%lf,%lf,%lf",
 				&format, &type, &length, &average_count, &xincrement, &xorigin, &xreference, &yincrement, &yorigin, &yreference);
@@ -511,7 +523,6 @@ bool AgilentOscilloscope::AcquireData(bool toQueue)
 		cap->m_startPicoseconds = (t - floor(t)) * 1e12f;
 
 		//Ask for the data
-		m_transport->SendCommand(":WAV:DATA?");
 
 		//Read the length header
 		char tmp[16] = {0};
